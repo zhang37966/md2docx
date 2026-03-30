@@ -29,6 +29,11 @@ from styles.docx_styles import (
     FOOTER_FONT_NAME,
     FOOTER_FONT_SIZE,
     CODE_BLOCK_BG_COLOR,
+    LIST_LEFT_INDENT,
+    LIST_HANGING_INDENT,
+    LIST_LINE_SPACING,
+    LIST_SPACE_BEFORE_LINES,
+    LIST_SPACE_AFTER,
 )
 from converter.md_parser import extract_text_from_children
 from docx.enum.style import WD_STYLE_TYPE
@@ -78,6 +83,27 @@ class DocxWriter:
             
         # 设置正文两端对齐
         pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+
+        # 3. "列表段落" (List Paragraph) 样式：应用于有序/无序列表
+        list_style = self.doc.styles.add_style('List Paragraph', WD_STYLE_TYPE.PARAGRAPH)
+        list_style.base_style = self.doc.styles['Normal']
+        list_style.font.name = FONT_CONFIG['body']['name_en']
+        list_style.font.size = FONT_CONFIG['body']['size']
+        list_style.element.rPr.rFonts.set(qn('w:eastAsia'), FONT_CONFIG['body']['name_cn'])
+
+        lpf = list_style.paragraph_format
+        lpf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        lpf.left_indent = LIST_LEFT_INDENT
+        lpf.first_line_indent = -LIST_HANGING_INDENT  # 悬挂缩进用负数表示
+        lpf.line_spacing = LIST_LINE_SPACING
+        lpf.space_after = LIST_SPACE_AFTER
+
+        # 段前用 XML 设置行数而非磅值
+        list_pPr = list_style._element.get_or_add_pPr()
+        list_spacing = list_pPr.get_or_add_spacing()
+        list_spacing.set(qn('w:beforeLines'), str(LIST_SPACE_BEFORE_LINES))
+        if list_spacing.get(qn('w:before')) is not None:
+            del list_spacing.attrib[qn('w:before')]
 
         # 修改全局标题颜色（转为自动/黑色）并约束为统一种类字体，设定段前段后行距
         title_cfg = FONT_CONFIG.get('title', {})
@@ -353,7 +379,7 @@ class DocxWriter:
                     self._add_inline_content(paragraph, child['children'])
 
     def _add_list(self, node: dict, level: int = 0):
-        """添加列表（有序/无序）。"""
+        """添加列表（有序/无序），使用 List Paragraph 样式。"""
         ordered = node.get('attrs', {}).get('ordered', False)
         children = node.get('children', [])
         counter = node.get('attrs', {}).get('start', 1) or 1
@@ -375,12 +401,14 @@ class DocxWriter:
                         else:
                             prefix = '• '
 
-                        indent = '    ' * level
-                        paragraph = self.doc.add_paragraph()
-                        # 设置缩进
-                        paragraph.paragraph_format.left_indent = Cm(1.27 * (level + 1))
+                        paragraph = self.doc.add_paragraph(style='List Paragraph')
 
-                        run = paragraph.add_run(indent + prefix)
+                        # 嵌套层级的额外缩进：每一级嵌套增加 1cm 左缩进
+                        if level > 0:
+                            extra_indent = LIST_LEFT_INDENT + Cm(1.0 * level)
+                            paragraph.paragraph_format.left_indent = extra_indent
+
+                        run = paragraph.add_run(prefix)
                         self._apply_body_font(run)
                         self._add_inline_content(paragraph, sub_node.get('children', []))
 
