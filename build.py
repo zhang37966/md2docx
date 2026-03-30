@@ -42,6 +42,7 @@ def build_exe():
         "-F",
         "-w",
         "-n", "MD2DOCX",
+        "--add-data", "font;font",  # 包含字体目录
         "main.py"
     ]
 

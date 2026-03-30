@@ -6,9 +6,12 @@ MD → DOCX 转换工具
 import sys
 from PyQt6.QtWidgets import QApplication
 from ui.main_window import MainWindow
-
+from utils.font_installer import check_and_install_font
 
 def main():
+    # 提前检查并安装可能缺少的字体
+    check_and_install_font()
+    
     app = QApplication(sys.argv)
 
     # 设置应用信息
