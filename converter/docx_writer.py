@@ -96,7 +96,9 @@ class DocxWriter:
 
         lpf = list_style.paragraph_format
         lpf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-        lpf.left_indent = LIST_LEFT_INDENT
+        # python-docx 的 left_indent = Word"文本之前" + "悬挂缩进"
+        # 首行位置 = left_indent + first_line_indent = 1.0 - 0.7 = 0.3cm ✓
+        lpf.left_indent = LIST_LEFT_INDENT + LIST_HANGING_INDENT  # 0.3 + 0.7 = 1.0cm
         lpf.first_line_indent = -LIST_HANGING_INDENT  # 悬挂缩进用负数表示
         lpf.line_spacing = LIST_LINE_SPACING
         lpf.space_after = LIST_SPACE_AFTER
@@ -408,7 +410,7 @@ class DocxWriter:
 
                         # 嵌套层级的额外缩进：每一级嵌套增加 1cm 左缩进
                         if level > 0:
-                            extra_indent = LIST_LEFT_INDENT + Cm(1.0 * level)
+                            extra_indent = LIST_LEFT_INDENT + LIST_HANGING_INDENT + Cm(1.0 * level)
                             paragraph.paragraph_format.left_indent = extra_indent
 
                         run = paragraph.add_run(prefix)
