@@ -85,7 +85,10 @@ class DocxWriter:
         pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
         # 3. "列表段落" (List Paragraph) 样式：应用于有序/无序列表
-        list_style = self.doc.styles.add_style('List Paragraph', WD_STYLE_TYPE.PARAGRAPH)
+        try:
+            list_style = self.doc.styles['List Paragraph']
+        except KeyError:
+            list_style = self.doc.styles.add_style('List Paragraph', WD_STYLE_TYPE.PARAGRAPH)
         list_style.base_style = self.doc.styles['Normal']
         list_style.font.name = FONT_CONFIG['body']['name_en']
         list_style.font.size = FONT_CONFIG['body']['size']
