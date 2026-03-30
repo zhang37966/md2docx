@@ -101,7 +101,7 @@ class DocxWriter:
 
         ol_pf = ol_style.paragraph_format
         ol_pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-        ol_pf.left_indent = OL_LEFT_INDENT + OL_HANGING_INDENT
+        ol_pf.left_indent = OL_LEFT_INDENT
         ol_pf.first_line_indent = -OL_HANGING_INDENT
         ol_pf.line_spacing = OL_LINE_SPACING
         ol_pf.space_after = OL_SPACE_AFTER
@@ -124,7 +124,7 @@ class DocxWriter:
 
         ul_pf = ul_style.paragraph_format
         ul_pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-        ul_pf.left_indent = UL_LEFT_INDENT + UL_HANGING_INDENT
+        ul_pf.left_indent = UL_LEFT_INDENT
         ul_pf.first_line_indent = -UL_HANGING_INDENT
         ul_pf.line_spacing = UL_LINE_SPACING
         ul_pf.space_after = UL_SPACE_AFTER
@@ -418,10 +418,10 @@ class DocxWriter:
         # 根据类型选择样式和缩进参数
         if ordered:
             style_name = 'List Paragraph'
-            base_indent = OL_LEFT_INDENT + OL_HANGING_INDENT
+            base_indent = OL_LEFT_INDENT
         else:
             style_name = 'UL Paragraph'
-            base_indent = UL_LEFT_INDENT + UL_HANGING_INDENT
+            base_indent = UL_LEFT_INDENT
 
         for item in children:
             if not isinstance(item, dict):
