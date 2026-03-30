@@ -249,10 +249,34 @@ class DocxWriter:
                 )
 
     def _add_paragraph(self, node: dict):
-        """添加段落。"""
+        """添加段落。检测软/硬回车并拆分为多个独立的 Word 段落"""
         children = node.get('children', [])
-        paragraph = self.doc.add_paragraph(style='Body Text')
-        self._add_inline_content(paragraph, children)
+        
+        current_group = []
+        groups = [current_group]
+        
+        for child in children:
+            if isinstance(child, dict) and child.get('type') in ('softbreak', 'linebreak'):
+                current_group = []
+                groups.append(current_group)
+            elif isinstance(child, dict) and child.get('type') == 'text' and '\n' in (child.get('raw', '') or child.get('text', '')):
+                # 兼容文本中直接包含换行符的情况
+                text = child.get('raw', '') or child.get('text', '')
+                parts = text.split('\n')
+                for i, part in enumerate(parts):
+                    if i > 0:
+                        current_group = []
+                        groups.append(current_group)
+                    if part:
+                        # 构造一个新的纯文本节点推入组内
+                        current_group.append({'type': 'text', 'raw': part})
+            else:
+                current_group.append(child)
+                
+        for group in groups:
+            if group:  # 只生成非空的段落
+                paragraph = self.doc.add_paragraph(style='Body Text')
+                self._add_inline_content(paragraph, group)
 
     def _add_inline_content(self, paragraph, children: list):
         """向段落中添加行内内容（文本、加粗、斜体、代码等）。"""
