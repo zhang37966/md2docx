@@ -187,7 +187,7 @@ class DocxWriter:
 
         if node_type == 'heading':
             self._add_heading(node)
-        elif node_type == 'paragraph':
+        elif node_type in ('paragraph', 'block_text'):
             self._add_paragraph(node)
         elif node_type == 'list':
             self._add_list(node, list_level)
@@ -367,7 +367,7 @@ class DocxWriter:
                 for sub_node in item_children:
                     if not isinstance(sub_node, dict):
                         continue
-                    if sub_node.get('type') == 'paragraph':
+                    if sub_node.get('type') in ('paragraph', 'block_text'):
                         # 生成列表前缀
                         if ordered:
                             prefix = f'{counter}. '
@@ -483,11 +483,11 @@ class DocxWriter:
         pPr.append(pBdr)
 
     def _add_block_quote(self, node: dict):
-        """添加引用块。"""
+        """添加引用说明块。左侧带有竖线，底色为淡蓝色"""
         children = node.get('children', [])
         for child in children:
             if isinstance(child, dict):
-                if child.get('type') == 'paragraph':
+                if child.get('type') in ('paragraph', 'block_text'):
                     paragraph = self.doc.add_paragraph()
                     # 添加左侧蓝色边框
                     pPr = paragraph._element.get_or_add_pPr()
