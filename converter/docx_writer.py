@@ -432,13 +432,6 @@ class DocxWriter:
                     if not isinstance(sub_node, dict):
                         continue
                     if sub_node.get('type') in ('paragraph', 'block_text'):
-                        # 生成列表前缀
-                        if ordered:
-                            prefix = f'{counter}. '
-                            counter += 1
-                        else:
-                            prefix = '• '
-
                         paragraph = self.doc.add_paragraph(style=style_name)
 
                         # 嵌套层级的额外缩进
@@ -446,8 +439,13 @@ class DocxWriter:
                             extra_indent = base_indent + Cm(1.0 * level)
                             paragraph.paragraph_format.left_indent = extra_indent
 
-                        run = paragraph.add_run(prefix)
-                        self._apply_body_font(run)
+                        # 有序列表需要手动添加编号前缀
+                        if ordered:
+                            prefix = f'{counter}. '
+                            counter += 1
+                            run = paragraph.add_run(prefix)
+                            self._apply_body_font(run)
+
                         self._add_inline_content(paragraph, sub_node.get('children', []))
 
                     elif sub_node.get('type') == 'list':
