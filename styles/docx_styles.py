@@ -115,7 +115,7 @@ OL_SPACE_BEFORE_LINES = 50           # 段前 0.5 行
 OL_SPACE_AFTER = Pt(0)               # 段后 0
 
 # 5. 无序列表 (List Bullet) 样式配置
-UL_LEFT_INDENT = Cm(1)               # 文本之前（左缩进）1 厘米
+UL_LEFT_INDENT = Cm(0.52)            # 文本之前（左缩进）0.52 厘米
 UL_HANGING_INDENT = Cm(0.41)         # 悬挂缩进 0.41 厘米
 UL_LINE_SPACING = 1.1                # 多倍行距 1.1 倍
 UL_SPACE_BEFORE_LINES = 50           # 段前 0.5 行

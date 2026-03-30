@@ -112,11 +112,11 @@ class DocxWriter:
         if ol_spacing.get(qn('w:before')) is not None:
             del ol_spacing.attrib[qn('w:before')]
 
-        # 4. "无序列表段落" (List Bullet) 样式
+        # 4. "无序列表段落" (UL Paragraph) 自定义样式（不使用内置 List Bullet 以避免自动编号和制表符）
         try:
-            ul_style = self.doc.styles['List Bullet']
+            ul_style = self.doc.styles['UL Paragraph']
         except KeyError:
-            ul_style = self.doc.styles.add_style('List Bullet', WD_STYLE_TYPE.PARAGRAPH)
+            ul_style = self.doc.styles.add_style('UL Paragraph', WD_STYLE_TYPE.PARAGRAPH)
         ul_style.base_style = self.doc.styles['Normal']
         ul_style.font.name = FONT_CONFIG['body']['name_en']
         ul_style.font.size = FONT_CONFIG['body']['size']
@@ -128,6 +128,7 @@ class DocxWriter:
         ul_pf.first_line_indent = -UL_HANGING_INDENT
         ul_pf.line_spacing = UL_LINE_SPACING
         ul_pf.space_after = UL_SPACE_AFTER
+        ul_pf.tab_stops.clear_all()  # 清除所有制表位
 
         ul_pPr = ul_style._element.get_or_add_pPr()
         ul_spacing = ul_pPr.get_or_add_spacing()
@@ -419,7 +420,7 @@ class DocxWriter:
             style_name = 'List Paragraph'
             base_indent = OL_LEFT_INDENT + OL_HANGING_INDENT
         else:
-            style_name = 'List Bullet'
+            style_name = 'UL Paragraph'
             base_indent = UL_LEFT_INDENT + UL_HANGING_INDENT
 
         for item in children:
@@ -439,12 +440,14 @@ class DocxWriter:
                             extra_indent = base_indent + Cm(1.0 * level)
                             paragraph.paragraph_format.left_indent = extra_indent
 
-                        # 有序列表需要手动添加编号前缀
+                        # 有序列表手动添加编号前缀，无序列表手动添加项目符号
                         if ordered:
                             prefix = f'{counter}. '
                             counter += 1
-                            run = paragraph.add_run(prefix)
-                            self._apply_body_font(run)
+                        else:
+                            prefix = '• '
+                        run = paragraph.add_run(prefix)
+                        self._apply_body_font(run)
 
                         self._add_inline_content(paragraph, sub_node.get('children', []))
 
