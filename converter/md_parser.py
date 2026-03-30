@@ -4,6 +4,7 @@ Markdown 解析模块
 输出统一的中间结构供 docx_writer 消费。
 """
 
+import re
 import mistune
 
 
@@ -16,6 +17,12 @@ def parse_markdown(md_text: str) -> list:
     Returns:
         mistune AST 节点列表
     """
+    # 预处理：修补缺失的空行
+    # 1. 确保标题上方有空行（如果上一行不是空行）
+    md_text = re.sub(r'([^\n])\n(#{1,6}\s+)', r'\1\n\n\2', md_text)
+    # 2. 确保标题下方有空行（如果下一行不是空行）
+    md_text = re.sub(r'(^|\n)(#{1,6}\s+.*?)\n([^\n])', r'\1\2\n\n\3', md_text)
+
     markdown = mistune.create_markdown(
         renderer='ast',
         plugins=['table', 'strikethrough']
