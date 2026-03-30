@@ -435,11 +435,6 @@ class DocxWriter:
                     if sub_node.get('type') in ('paragraph', 'block_text'):
                         paragraph = self.doc.add_paragraph(style=style_name)
 
-                        # 嵌套层级的额外缩进
-                        if level > 0:
-                            extra_indent = base_indent + Cm(1.0 * level)
-                            paragraph.paragraph_format.left_indent = extra_indent
-
                         # 有序列表手动添加编号前缀，无序列表手动添加项目符号
                         if ordered:
                             prefix = f'{counter}. '
