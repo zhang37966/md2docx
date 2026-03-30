@@ -29,11 +29,16 @@ from styles.docx_styles import (
     FOOTER_FONT_NAME,
     FOOTER_FONT_SIZE,
     CODE_BLOCK_BG_COLOR,
-    LIST_LEFT_INDENT,
-    LIST_HANGING_INDENT,
-    LIST_LINE_SPACING,
-    LIST_SPACE_BEFORE_LINES,
-    LIST_SPACE_AFTER,
+    OL_LEFT_INDENT,
+    OL_HANGING_INDENT,
+    OL_LINE_SPACING,
+    OL_SPACE_BEFORE_LINES,
+    OL_SPACE_AFTER,
+    UL_LEFT_INDENT,
+    UL_HANGING_INDENT,
+    UL_LINE_SPACING,
+    UL_SPACE_BEFORE_LINES,
+    UL_SPACE_AFTER,
 )
 from converter.md_parser import extract_text_from_children
 from docx.enum.style import WD_STYLE_TYPE
@@ -84,31 +89,51 @@ class DocxWriter:
         # 设置正文两端对齐
         pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
-        # 3. "列表段落" (List Paragraph) 样式：应用于有序/无序列表
+        # 3. "有序列表段落" (List Paragraph) 样式
         try:
-            list_style = self.doc.styles['List Paragraph']
+            ol_style = self.doc.styles['List Paragraph']
         except KeyError:
-            list_style = self.doc.styles.add_style('List Paragraph', WD_STYLE_TYPE.PARAGRAPH)
-        list_style.base_style = self.doc.styles['Normal']
-        list_style.font.name = FONT_CONFIG['body']['name_en']
-        list_style.font.size = FONT_CONFIG['body']['size']
-        list_style.element.rPr.rFonts.set(qn('w:eastAsia'), FONT_CONFIG['body']['name_cn'])
+            ol_style = self.doc.styles.add_style('List Paragraph', WD_STYLE_TYPE.PARAGRAPH)
+        ol_style.base_style = self.doc.styles['Normal']
+        ol_style.font.name = FONT_CONFIG['body']['name_en']
+        ol_style.font.size = FONT_CONFIG['body']['size']
+        ol_style.element.rPr.rFonts.set(qn('w:eastAsia'), FONT_CONFIG['body']['name_cn'])
 
-        lpf = list_style.paragraph_format
-        lpf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-        # python-docx 的 left_indent = Word"文本之前" + "悬挂缩进"
-        # 首行位置 = left_indent + first_line_indent = 1.0 - 0.7 = 0.3cm ✓
-        lpf.left_indent = LIST_LEFT_INDENT + LIST_HANGING_INDENT  # 0.3 + 0.7 = 1.0cm
-        lpf.first_line_indent = -LIST_HANGING_INDENT  # 悬挂缩进用负数表示
-        lpf.line_spacing = LIST_LINE_SPACING
-        lpf.space_after = LIST_SPACE_AFTER
+        ol_pf = ol_style.paragraph_format
+        ol_pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        ol_pf.left_indent = OL_LEFT_INDENT + OL_HANGING_INDENT
+        ol_pf.first_line_indent = -OL_HANGING_INDENT
+        ol_pf.line_spacing = OL_LINE_SPACING
+        ol_pf.space_after = OL_SPACE_AFTER
 
-        # 段前用 XML 设置行数而非磅值
-        list_pPr = list_style._element.get_or_add_pPr()
-        list_spacing = list_pPr.get_or_add_spacing()
-        list_spacing.set(qn('w:beforeLines'), str(LIST_SPACE_BEFORE_LINES))
-        if list_spacing.get(qn('w:before')) is not None:
-            del list_spacing.attrib[qn('w:before')]
+        ol_pPr = ol_style._element.get_or_add_pPr()
+        ol_spacing = ol_pPr.get_or_add_spacing()
+        ol_spacing.set(qn('w:beforeLines'), str(OL_SPACE_BEFORE_LINES))
+        if ol_spacing.get(qn('w:before')) is not None:
+            del ol_spacing.attrib[qn('w:before')]
+
+        # 4. "无序列表段落" (List Bullet) 样式
+        try:
+            ul_style = self.doc.styles['List Bullet']
+        except KeyError:
+            ul_style = self.doc.styles.add_style('List Bullet', WD_STYLE_TYPE.PARAGRAPH)
+        ul_style.base_style = self.doc.styles['Normal']
+        ul_style.font.name = FONT_CONFIG['body']['name_en']
+        ul_style.font.size = FONT_CONFIG['body']['size']
+        ul_style.element.rPr.rFonts.set(qn('w:eastAsia'), FONT_CONFIG['body']['name_cn'])
+
+        ul_pf = ul_style.paragraph_format
+        ul_pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        ul_pf.left_indent = UL_LEFT_INDENT + UL_HANGING_INDENT
+        ul_pf.first_line_indent = -UL_HANGING_INDENT
+        ul_pf.line_spacing = UL_LINE_SPACING
+        ul_pf.space_after = UL_SPACE_AFTER
+
+        ul_pPr = ul_style._element.get_or_add_pPr()
+        ul_spacing = ul_pPr.get_or_add_spacing()
+        ul_spacing.set(qn('w:beforeLines'), str(UL_SPACE_BEFORE_LINES))
+        if ul_spacing.get(qn('w:before')) is not None:
+            del ul_spacing.attrib[qn('w:before')]
 
         # 修改全局标题颜色（转为自动/黑色）并约束为统一种类字体，设定段前段后行距
         title_cfg = FONT_CONFIG.get('title', {})
@@ -384,10 +409,18 @@ class DocxWriter:
                     self._add_inline_content(paragraph, child['children'])
 
     def _add_list(self, node: dict, level: int = 0):
-        """添加列表（有序/无序），使用 List Paragraph 样式。"""
+        """添加列表（有序/无序），有序用 List Paragraph，无序用 List Bullet。"""
         ordered = node.get('attrs', {}).get('ordered', False)
         children = node.get('children', [])
         counter = node.get('attrs', {}).get('start', 1) or 1
+
+        # 根据类型选择样式和缩进参数
+        if ordered:
+            style_name = 'List Paragraph'
+            base_indent = OL_LEFT_INDENT + OL_HANGING_INDENT
+        else:
+            style_name = 'List Bullet'
+            base_indent = UL_LEFT_INDENT + UL_HANGING_INDENT
 
         for item in children:
             if not isinstance(item, dict):
@@ -406,11 +439,11 @@ class DocxWriter:
                         else:
                             prefix = '• '
 
-                        paragraph = self.doc.add_paragraph(style='List Paragraph')
+                        paragraph = self.doc.add_paragraph(style=style_name)
 
-                        # 嵌套层级的额外缩进：每一级嵌套增加 1cm 左缩进
+                        # 嵌套层级的额外缩进
                         if level > 0:
-                            extra_indent = LIST_LEFT_INDENT + LIST_HANGING_INDENT + Cm(1.0 * level)
+                            extra_indent = base_indent + Cm(1.0 * level)
                             paragraph.paragraph_format.left_indent = extra_indent
 
                         run = paragraph.add_run(prefix)
