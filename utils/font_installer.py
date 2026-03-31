@@ -1,7 +1,6 @@
 import os
 import sys
 import shutil
-import winreg
 
 FONT_FILENAME = "仿宋_GB2312.ttf"
 FONT_REG_ZNAME = "仿宋_GB2312 (TrueType)"
