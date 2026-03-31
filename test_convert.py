@@ -6,8 +6,10 @@ CLI 转换测试脚本
 import sys
 import os
 
-# 确保项目根目录在 sys.path 中
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# 确保 Skill 目录（核心模块所在地）在 sys.path 中
+SKILL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '.agents', 'skills', 'md2docx-converter')
+sys.path.insert(0, SKILL_DIR)
 
 from converter.md_parser import parse_markdown, read_md_file
 from converter.docx_writer import DocxWriter

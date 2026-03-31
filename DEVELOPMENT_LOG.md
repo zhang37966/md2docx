@@ -1,5 +1,37 @@
 # 开发日志
 
+#### 2026-03-31 23:03 - 移除 requirements.txt 并完全迁移至 uv 依赖管理器
+- **任务表述**：项目已配置 `pyproject.toml` 并使用 `uv sync` 管理依赖，用户确认是否可删除项目根目录的 `requirements.txt`。
+- **完成情况**：
+  - 成功删除了根目录过时的 `requirements.txt`。
+  - 同步更新了 `README.md` 的快速使用指南（修改为 `uv sync` 与 `uv run python main.py`）。
+  - 更新了 `README.md` 中的项目结构树文档，充分反映了目前的 Skill 架构设计。
+  - 注：Skill内部的 `requirements.txt` 被保留，以确保 Skill 的可移植性。
+
+#### 2026-03-31 22:35 - 项目架构重组：核心逻辑整体迁移至 Skill 目录
+- **任务表述**：用户要求将 md2docx-converter Skill 重构为完全自包含的可移植结构，能够直接拷贝到其他项目复用，同时不影响原有 GUI 功能。
+- **完成情况**：
+  - 将 `converter/`、`styles/`、`utils/`、`font/` 四个核心目录从项目根**整体迁移**（非复制）至 `.agents/skills/md2docx-converter/` 内，成为唯一来源。
+  - `main.py` 增加 `sys.path.insert(0, SKILL_DIR)` 桥接，使 `ui/main_window.py` 的所有 import 无需改动即自动从 Skill 目录解析。
+  - `build.py` 更新 font 数据路径和 `--paths` 参数指向 Skill 目录。
+  - `test_convert.py` 更新 sys.path 指向 Skill 目录。
+  - Skill 内 `scripts/convert.py` 路径变量重命名为 `SKILL_ROOT`。
+  - 重写 `SKILL.md`：去除硬编码绝对路径，改为动态定位；新增移植指南、前置依赖、维护说明章节。
+  - 新增 `requirements.txt`（Skill 专属依赖）和 `examples/sample.md`（测试样例）。
+  - 已通过全部验证：Skill CLI 独立转换、test_convert.py、端到端模拟 GUI 转换流程均正常。
+
+#### 2026-03-31 21:10 - 封装 MD2DOCX 为 Antigravity Skill
+- **任务表述**：用户希望将现有的 MD2DOCX 转换工具封装为 Antigravity（OpenClaw）的 Skill，使 AI 能在对话中直接将生成的 Markdown 内容输出为格式化的 Word 文档。
+- **完成情况**：
+  - 新增 `scripts/convert.py`：独立 CLI 转换入口，不依赖 PyQt6 GUI，支持 `--input`（文件）、`--text`（文本）、`--stdin`（标准输入）三种输入方式，以及 `--style A|B` 样式选择和 `--skip-font-check` 字体跳过选项。
+  - 重写 `.agents/skills/md2docx-converter/SKILL.md`：完整的 Skill 指令文档，定义触发条件、命令格式、样式选择策略（默认样式 A，AI 可建议或用户指定）、四步执行流程（准备内容 → 确定输出路径 → 执行转换 → 报告结果），以及排版能力概览和注意事项。
+  - 输出路径由 AI 根据上下文自动决定（用户指定 > 工作区根目录 > 桌面兜底）。
+  - 已通过 `--input` 文件模式和 `--text` 文本模式的端到端转换测试，两种样式均验证通过。
+
+#### 2026-03-31 20:39 - 重写项目 README 文档
+- **任务表述**：用户要求重写 README.md，原版存在结构混乱（方法三内容缺失、目录树错位嵌入在方法三标题下）、信息层级不清晰等问题。
+- **完成情况**：全面重写了 README.md。修复了原版的结构性缺陷，重新组织了信息层级：核心特性总览（解析能力、双输入模式、智能容错、排版样式、标题映射、自动化能力）→ 快速开始（三种启动方式）→ 使用方法 → 项目结构 → 二次开发 → 依赖项。补充了依赖项清单表格和 License 声明，优化了 Badge 样式，使文档更加专业和易读。
+
 #### 2026-03-31 17:05 - 收集全部项目字体并升级为批量自动安装
 - **任务表述**：用户要求将项目中用到的所有字体都放到 `font/` 目录，确保 Mac 用户也能自动安装并保持与 Windows 完全一致的排版效果。
 - **完成情况**：

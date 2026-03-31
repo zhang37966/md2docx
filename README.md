@@ -1,49 +1,63 @@
-# MD2DOCX - Markdown 转 Word 桌面工具
+# MD2DOCX
 
-![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
-![PyQt6](https://img.shields.io/badge/GUI-PyQt6-green.svg)
-![python-docx](https://img.shields.io/badge/Word-python--docx-orange.svg)
+> 🖋️ 轻量级 Markdown → Word 桌面转换工具，面向中文公文排版场景
 
-**MD2DOCX** 是一个基于 Python 和 PyQt6 开发的轻量级桌面应用程序。它可以方便地将 `.md` (Markdown) 文件快速转换为带有标准 Word 样式的 `.docx` 文档，支持一键拖拽、自动保存、两种标题级别映射，并且自动安装所需字体。
+![Python](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)
+![PyQt6](https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white)
+![python-docx](https://img.shields.io/badge/Word-python--docx-2B579A?logo=microsoftword&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-lightgrey)
+
+**MD2DOCX** 是一款基于 Python + PyQt6 的跨平台桌面应用。将 `.md` 文件一键转化为带标准 Word 样式的 `.docx` 文档——仿宋正文、黑体标题、首行缩进、页脚页码，开箱即用，无需手动排版。
 
 ---
 
 ## ✨ 核心特性
 
-### 📝 丰富的 Markdown 解析
+### 📝 Markdown 解析
 
-- **双输入模式**：支持一键拖拽 `.md` 文件，新增了“✍️ 文本转换”标签页中直接粘贴或手敲 Markdown 文本进行无损转换的能力。
-- **智能排版容错**：极大提高了用户随意跨平台复制文本时丢失物理空行的容错度。即使标题与正文间缺少严格空行，排版引擎也会自动隔离；正文内如果没敲两次换行产生的普通软回车（`^l`），也会被智能切分为原生态真正的 Word 独立段落（硬回车 `^p`），绝不粘连杂糅。
+基于 [Mistune](https://github.com/lepture/mistune) AST 引擎，精准转换以下元素：
 
-依靠 `mistune` 强大的 AST 解析能力，精准转换以下元素：
+| 元素 | 说明 |
+|---|---|
+| 标题 | H1 ~ H6，支持两套 Word 大纲映射 |
+| 文本格式 | **加粗**、*斜体* |
+| 列表 | 有序 / 无序，多层嵌套 |
+| 代码 | 代码块（底色 + 边框 + 等宽字体）、行内代码 |
+| 表格 | 自动加粗表头 |
+| 引用块 | 左侧蓝色边条 + 淡蓝底色 |
+| 超链接 | 蓝色下划线 |
+| 图片 | 本地图片嵌入 |
+| 分隔线 | 水平分割 |
 
-- 标题 (H1~H6)，支持两种不同的 Word 样式映射
-- 文本格式（**加粗**、*斜体*）
-- 列表（无序列表、有序列表及多层嵌套）
-- 代码块（带底色和边框格式化的等宽字体）和行内代码
-- 表格（自动加粗表头）
-- 引用说明块（左侧带有蓝色边条及淡蓝底色）
-- 分隔线
-- 超链接（蓝色下划线）
-- 本地图片嵌入
+### 📄 双输入模式
+
+- **文件转换** — 拖拽或选择 `.md` 文件
+- **文本转换** — 直接粘贴 / 手敲 Markdown 原文，即时转换
+
+### 🎯 智能排版容错
+
+即使用户粘贴的文本缺少严格空行，也能正确排版：
+
+- 标题与正文间缺少空行 → 自动隔离
+- 段落内软回车（`^l`） → 自动切分为独立 Word 段落（`^p`）
 
 ### 🎨 专业的排版样式
 
-所有排版参数均在 `styles/docx_styles.py` 中统一配置，可视化调整：
+所有排版参数统一管理在 `styles/docx_styles.py`，可视化调整：
 
-| 样式类别 | 字体 | 字号 | 行距 | 对齐方式 | 段前 / 段后 |
+| 样式 | 字体 | 字号 | 行距 | 对齐 | 段前 / 段后 |
 |---|---|---|---|---|---|
-| **正文** (Normal) | 仿宋_GB2312 | 小四 (12pt) | 单倍 | 两端对齐 | 0 / 0 |
-| **正文文本** (Body Text) | 仿宋_GB2312 | 小四 (12pt) | 1.2 倍 | 两端对齐 | 0.5 行 / 0 |
-| **一级标题** (`#`) | 黑体 + 加粗 | 18pt | 单倍 | 居中 | 0 / 16 磅 |
-| **其余标题** (`##`~`######`) | 宋体 | 按级递减 | 单倍 | 左对齐 | 1 行 / 0.5 行 |
-| **代码块** | Consolas | 10pt | — | — | 6pt / 6pt |
+| 正文 (Normal) | 仿宋_GB2312 | 小四 (12pt) | 单倍 | 两端对齐 | 0 / 0 |
+| 正文文本 (Body Text) | 仿宋_GB2312 | 小四 (12pt) | 1.2 倍 | 两端对齐 | 0.5 行 / 0 |
+| 一级标题 (`#`) | 黑体 + 加粗 | 18pt | 单倍 | 居中 | 0 / 16 磅 |
+| 其余标题 (`##` ~ `######`) | 宋体 | 按级递减 | 单倍 | 左对齐 | 1 行 / 0.5 行 |
+| 代码块 | Consolas | 10pt | — | — | 6pt / 6pt |
 
 > 首行缩进 2 字符 (24pt)，文档网格对齐已全局禁用。
 
-### 📄 两种标题级别映射
+### 🔀 两种标题级别映射
 
-| Markdown | 样式 A (Title 模式) | 样式 B (Heading 模式) |
+| Markdown | 样式 A（Title 模式） | 样式 B（Heading 模式） |
 |---|---|---|
 | `#` | Title (18pt) | Heading 1 (18pt) |
 | `##` | Heading 1 (16pt) | Heading 2 (16pt) |
@@ -52,114 +66,115 @@
 | `#####` | Heading 4 (11pt) | Heading 5 (11pt) |
 | `######` | Heading 5 (10.5pt) | Heading 6 (10.5pt) |
 
-> 两种模式下，同级标题视觉大小完全一致，区别仅在 Word 大纲层级。
+> 两种模式下同级标题视觉大小完全一致，区别仅在 Word 大纲层级。
 
 ### 🔧 自动化能力
 
-- **字体自动安装**：首次启动时自动检测并静默安装**仿宋_GB2312**字体（写入用户注册表，无需管理员权限）
-- **页脚页码**：自动生成「第 X 页 共 Y 页」居中页码
-- **智能保存**：所有转换模式会自动基于输入内容预填写目标 `.docx` 文件名，并统一弹出本地保存对话框，允许自由选择归档位置
-- **快速预览**：转换成功后可一键拉起跨平台的 Office 应用打开生成的 Word 文档
-- **文件占用提示**：检测到文件被 Word 占用时，弹出友好提示而非崩溃
-
-## 🚀 立即开始
-
-### 方法一：免安装绿色打包版（推荐非技术人员使用）
-
-您可以自行使用源码中的脚本将 Python 转化为立即可点击的应用程序：
-
-**Windows / Mac 跨平台自适应打包**
-1. 确保安装了 `python` 和 `pip`
-2. 运行打包脚本：
-   ```bash
-   python build.py
-   ```
-3. 等待完成后，`dist` 文件夹中将自动根据您当前使用的操作系统，生成对应的文件：
-   - 💻 若在 Windows 运行：生成 **`MD2DOCX.exe`**，直接双击运行。
-   - 🍎 若在 Mac 运行：生成 **`MD2DOCX.app`**（原生应用包），双击运行。
-
-> **💡 跨平台注意**：由于二进制不可跨平台，如果需要发给 Mac 用户，请在 Mac 电脑上运行一遍 `python build.py` 打包；如果需要发给 Windows 用户，请在 Windows 电脑上运行。
-
-### 方法二：极速双击运行脚本（推荐开发者快速上手）
-
-若您已安装 Python 环境，无需经历漫长的打包即可使用一键脚本拉起：
-- **💻 Windows 系统**：直接双击根目录下的 `run-win.bat`（将自动安装环境并唤起界面）
-- **🍎 Mac/Linux 系统**：在终端里双击运行 `run-mac.command` 即可（首次运行前可用 `chmod +x run-mac.command` 赋权）
-
-### 方法三：原始开发环境启动 脚本
-├── requirements.txt         # Python 依赖项
-├── DEVELOPMENT_LOG.md       # 开发日志
-├── font/
-│   └── 仿宋_GB2312.ttf      # 内嵌字体文件（打包时一并分发）
-├── converter/               # 转换引擎核心模块
-│   ├── md_parser.py         # Markdown AST 语法树解析器
-│   └── docx_writer.py       # DOCX 文档生成及格式映射引擎
-├── styles/
-│   └── docx_styles.py       # 全局样式配置（字体、字号、间距、标题映射等）
-├── ui/
-│   └── main_window.py       # PyQt6 主窗口视图与交互逻辑
-└── utils/
-    └── font_installer.py    # 字体自动检测与静默安装组件
-```
+- **字体自动安装** — 首次启动自动检测并静默安装仿宋_GB2312 / 宋体 / 黑体（Windows 写注册表，macOS 写 `~/Library/Fonts`，无需管理员权限）
+- **页脚页码** — 自动生成「第 X 页 共 Y 页」居中页码
+- **智能保存** — 自动预填 `.docx` 文件名，弹出保存对话框自由选择归档位置
+- **快速预览** — 转换成功后一键调用系统 Office 打开生成的文档
+- **文件占用友好提示** — 检测到文件被 Word 占用时弹出提示而非崩溃
 
 ---
 
-## 🛠️ 安装与运行指南
+## 🚀 快速开始
 
-### 1. 环境依赖
+### 方式一：极速脚本启动（推荐）
 
-确保您的系统已安装 Python（建议 3.9 或更高版本）。
+已安装 Python 环境的用户，无需打包即可使用：
 
-```bash
-pip install -r requirements.txt
+**💻 Windows**
+```
+双击 run-win.bat
 ```
 
-*主要依赖项：`PyQt6`, `python-docx`, `mistune`*
-
-### 2. 启动应用程序
-
+**🍎 macOS**
 ```bash
-python main.py
+chmod +x run-mac.command   # 首次运行前赋权
+双击 run-mac.command
 ```
 
-### 3. 使用方法
+> 脚本会自动通过 [uv](https://github.com/astral-sh/uv) 同步依赖并启动 GUI。
 
-**方式一：文件转换**
-1. 停留在“📄 文件转换”标签页。
-2. 将 Markdown 文件拖入中央区域，或点击上方按钮选择文件。
+### 方式二：手动运行
 
-**方式二：文本转换**
-1. 切换到“✍️ 文本转换”标签页。
-2. 直接在宽大的文本框内粘贴你复制好的 Markdown 文本。
+```bash
+# 1. 安装依赖
+uv sync
 
-**共同步骤：**
-1. 根据排版需求，在底部选择转换样式（样式 A 或样式 B）。
-2. 点击 **🚀 开始转换**（文件模式下如果没选文件，会自动弹出选择框；文本模式下请保证输入不为空）。
-3. 转换完成后，可点击弹出对话框中的 **打开文档** 按钮直接预览结果。
-4. 如需重新转换，可利用“清除选择”或“清空文本”按钮重置界面状态。
+# 2. 启动应用
+uv run python main.py
+```
 
----
-
-## 📦 打包为独立可执行文件 (EXE)
+### 方式三：打包为独立可执行文件
 
 ```bash
 python build.py
 ```
 
-程序将自动：
+打包脚本会自动：
 
-1. 检测并安装 `pyinstaller`（如果没有）
-2. 清除之前的打包缓存 (`build/`, `dist/`)
+1. 检测并安装 `pyinstaller`
+2. 清除旧的打包缓存 (`build/`, `dist/`)
 3. 将字体资源及所有依赖打包为单文件
-4. 生成 **`dist/MD2DOCX.exe`** 免安装程序
+4. 根据当前操作系统生成对应产物：
+   - 💻 Windows → `dist/MD2DOCX.exe`
+   - 🍎 macOS → `dist/MD2DOCX.app`
+
+> ⚠️ 由于二进制不可跨平台，需在目标系统上分别执行 `python build.py` 打包。
 
 ---
 
-## 🧩 二次开发说明
+## 📖 使用方法
+
+**文件转换**
+
+1. 停留在「📄 文件转换」标签页
+2. 将 `.md` 文件拖入中央区域，或点击按钮选择文件
+
+**文本转换**
+
+1. 切换到「✍️ 文本转换」标签页
+2. 在文本框内粘贴 Markdown 内容
+
+**共通步骤**
+
+1. 在底部选择转换样式（样式 A 或样式 B）
+2. 点击 **🚀 开始转换**
+3. 在弹出的对话框中选择保存位置
+4. 转换完成后，可点击 **打开文档** 按钮直接预览结果
+
+---
+
+## 📂 项目结构
+
+```
+md2docx/
+├── main.py                  # 应用入口
+├── pyproject.toml           # 项目依赖配置 (uv)
+├── build.py                 # 跨平台打包脚本
+├── run-win.bat              # Windows 一键启动
+├── run-mac.command           # macOS 一键启动
+│
+├── ui/
+│   └── main_window.py       # PyQt6 主窗口 & 交互逻辑
+│
+└── .agents/skills/md2docx-converter/  # 核心转换逻辑 (Skill)
+    ├── converter/           # 转换引擎 (AST解析 & DOCX生成)
+    ├── styles/              # 全局样式配置
+    ├── utils/               # 字体自动检测与安装
+    ├── font/                # 内嵌字体资源
+    └── scripts/convert.py   # CLI 转换入口
+```
+
+---
+
+## 🧩 二次开发
 
 ### 样式与排版
 
-所有样式参数集中管理在 `styles/docx_styles.py` 中，包括：
+所有样式参数集中管理在 `styles/docx_styles.py`：
 
 | 配置项 | 说明 |
 |---|---|
@@ -168,12 +183,30 @@ python build.py
 | `BODY_*` | 正文文本 (Body Text) 的行距、缩进、段前段后 |
 | `HEADING_*` | 标题样式的行距、段前段后、居中等级 |
 | `HEADING_FONT_SIZES_A/B` | 两种模式的标题字号映射表 |
+| `OL_*` / `UL_*` | 有序列表 / 无序列表的缩进与间距 |
 | `FOOTER_*` | 页脚页码的字体和字号 |
 | `CODE_BLOCK_*` | 代码块的背景色和边框色 |
 
-> **重要**：`docx_styles.py` 是样式的唯一真实来源，`docx_writer.py` 的渲染逻辑必须始终引用它的导出变量，不允许硬编码格式参数。
+> ⚠️ **重要**：`docx_styles.py` 是样式的唯一真实来源。`docx_writer.py` 的渲染逻辑必须始终引用其导出变量，**不允许硬编码格式参数**。
 
 ### 添加新 Markdown 语法
 
-1. 在 `converter/md_parser.py` 的 Mistune 选项中启用对应的 `plugins`。
-2. 在 `converter/docx_writer.py` 的 `_process_node()` 中拦截新类型 AST 节点并实现生成逻辑。
+1. 在 `converter/md_parser.py` 的 Mistune 配置中启用对应的 `plugins`
+2. 在 `converter/docx_writer.py` 的 `_process_node()` 中拦截新类型 AST 节点并实现生成逻辑
+
+---
+
+## 📋 依赖项
+
+| 包 | 用途 |
+|---|---|
+| [PyQt6](https://pypi.org/project/PyQt6/) | GUI 框架 |
+| [python-docx](https://pypi.org/project/python-docx/) ≥ 1.2.0 | Word 文档生成 |
+| [mistune](https://pypi.org/project/mistune/) ≥ 3.0.0 | Markdown AST 解析 |
+| [pyinstaller](https://pypi.org/project/pyinstaller/) | 打包为可执行文件（可选） |
+
+---
+
+## 📄 License
+
+MIT

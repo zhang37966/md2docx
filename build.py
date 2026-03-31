@@ -39,13 +39,19 @@ def build_exe():
     # 根据操作系统动态选择分隔符 (Windows 是 ; Mac/Linux 是 :)
     separator = ";" if sys.platform == "win32" else ":"
 
+    # 核心模块已迁移至 Skill 目录
+    skill_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '.agents', 'skills', 'md2docx-converter')
+    font_dir = os.path.join(skill_dir, 'font')
+
     pyinstaller_cmd = [
         sys.executable, "-m", "PyInstaller",
         "--clean",
         "-F",
         "-w",
         "-n", "MD2DOCX",
-        "--add-data", f"font{separator}font",  # 包含字体目录
+        "--add-data", f"{font_dir}{separator}font",  # 包含字体目录
+        "--paths", skill_dir,  # 确保 PyInstaller 找到 Skill 内的模块
         "main.py"
     ]
 
