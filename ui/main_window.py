@@ -147,11 +147,14 @@ class MainWindow(QMainWindow):
 
         # 应用全局样式
         self.setStyleSheet("""
+            * {
+                font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+            }
             QMainWindow {
                 background-color: #FFFFFF;
             }
             QGroupBox {
-                font-family: "Microsoft YaHei";
+                font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
                 font-size: 12px;
                 font-weight: bold;
                 border: 1px solid #E0E0E0;
@@ -167,7 +170,7 @@ class MainWindow(QMainWindow):
                 color: #333;
             }
             QRadioButton {
-                font-family: "Microsoft YaHei";
+                font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
                 font-size: 12px;
                 spacing: 8px;
                 padding: 6px 4px;
@@ -182,7 +185,7 @@ class MainWindow(QMainWindow):
                 background: #FAFBFC;
             }
             QTabBar::tab {
-                font-family: "Microsoft YaHei";
+                font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
                 font-size: 11px;
                 font-weight: bold;
                 padding: 8px 20px;

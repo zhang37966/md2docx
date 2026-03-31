@@ -1,5 +1,12 @@
 # 开发日志
 
+#### 2026-03-31 16:05 - 全面升级为跨平台通用桌面应用 (Windows/macOS)
+- **任务表述**：用户发现旧版本强绑定于 Windows 的系统级 API（如字体安装、文件预览、可点击程序分发），提出希望使其成为兼容 Mac 的双平台工具，同时寻找简化的跨平台快速启动捷径。
+- **完成情况**：
+  - **字体解耦机制**：重写了 `utils/font_installer.py`，移除 `winreg` 注册表的强制逻辑。在 Mac 下通过自动读取判定并静默存入 `~/Library/Fonts` 的方法替代了原先逻辑。
+  - **跨端交互适配**：修复了 `ui/main_window.py` 里的字体样式，增加 Mac 苹方备选（`PingFang SC`）；将打开文件的系统事件由专属 `os.startfile` 重组为自适应触发 `subprocess.call`（'open'/'xdg-open'）。
+  - **打包自适应与免打包捷径**：全面升级了 `build.py`。现在单个 `build.py` 在谁的系统跑，就能自动产出谁原生的端（Win是 `.exe`，Mac是 `.app`）。并且附带新增了 `run-win.bat` 和 `run-mac.command` 两个极速开箱启动的快捷脚本。
+
 #### 2026-03-31 14:10 - 统一文件与文本模式的保存行为
 - **任务表述**：用户提出希望在“文件转换”模式下，不仅是默默保存到来源目录，而是像“文本转换”一样能够在生成前弹出浏览框选择目标路径。
 - **完成情况**：修改了 `ui/main_window.py` 中的 `_convert_from_file` 逻辑。去除了硬编码生成的 `save_path` 自动执行，引入 `QFileDialog.getSaveFileName` 互动对话框。同时设置了友好的 `default_save_path`，确保能够基于原始 `.md` 文件名自动预填 `.docx` 后缀，使得两套模式的工作流最终行为一致。
