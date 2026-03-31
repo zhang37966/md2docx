@@ -452,7 +452,16 @@ class MainWindow(QMainWindow):
             return
 
         style_mode = 'A' if self.radio_a.isChecked() else 'B'
-        save_path = os.path.splitext(file_path)[0] + '.docx'
+        
+        default_save_path = os.path.splitext(file_path)[0] + '.docx'
+        save_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "保存 Word 文档",
+            default_save_path,
+            "Word 文档 (*.docx)"
+        )
+        if not save_path:
+            return
 
         self.status_label.setText("⏳ 正在转换...")
         self.status_label.setStyleSheet("color: #5B8DEF;")
