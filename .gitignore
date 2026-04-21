@@ -25,3 +25,6 @@ Thumbs.db
 !test_grid.docx
 !test_sample_styleA.docx
 !test_sample_styleB.docx
+
+# 可执行文件
+*.exe
