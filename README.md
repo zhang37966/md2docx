@@ -1,44 +1,49 @@
-# MD2DOCX - Markdown 转 Word 桌面工具
+# MD2DOCX
 
-![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
-![PyQt6](https://img.shields.io/badge/GUI-PyQt6-green.svg)
-![python-docx](https://img.shields.io/badge/Word-python--docx-orange.svg)
+<p align="center">
+  <strong>Markdown → Word 一键转换桌面工具</strong>
+</p>
 
-**MD2DOCX** 是一个基于 Python 和 PyQt6 开发的轻量级桌面应用程序。它可以方便地将 `.md` (Markdown) 文件快速转换为带有标准 Word 样式的 `.docx` 文档，支持一键拖拽、自动保存、两种标题级别映射，并且自动安装所需字体。
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white" alt="PyQt6">
+  <img src="https://img.shields.io/badge/Word-python--docx-2B579A?logo=microsoftword&logoColor=white" alt="python-docx">
+  <img src="https://img.shields.io/badge/Parser-mistune_3-FF6B6B" alt="mistune">
+</p>
 
 ---
 
-## ✨ 核心特性
+**MD2DOCX** 是一款基于 Python 和 PyQt6 的轻量级桌面应用，专为**中文公文 / 正式文档**场景设计。只需拖入 `.md` 文件，即可生成带有标准 Word 样式的 `.docx` 文档——自动排版、自动页码、自动字体安装，开箱即用。
 
-### 📝 丰富的 Markdown 解析
+## ✨ 功能亮点
 
-依靠 `mistune` 强大的 AST 解析能力，精准转换以下元素：
+### 📝 Markdown 全要素解析
 
-- 标题 (H1~H6)，支持两种不同的 Word 样式映射
-- 文本格式（**加粗**、*斜体*）
-- 列表（无序列表、有序列表及多层嵌套）
-- 代码块（带底色和边框格式化的等宽字体）和行内代码
-- 表格（自动加粗表头）
-- 引用说明块（左侧带有蓝色边条及淡蓝底色）
-- 分隔线
-- 超链接（蓝色下划线）
-- 本地图片嵌入
+基于 `mistune` AST 引擎，精准转换以下元素：
 
-### 🎨 专业的排版样式
+- **文本格式** — 加粗、斜体
+- **标题** — H1 ~ H6，支持两种 Word 样式映射
+- **列表** — 有序 / 无序 / 多层嵌套
+- **代码** — 行内代码 & 代码块（等宽字体 + 底色边框）
+- **表格** — 自动加粗表头
+- **引用块** — 左侧蓝色边条 + 淡蓝底色
+- **超链接** — 蓝色下划线可点击
+- **本地图片** — 自动嵌入
+- **分隔线**
 
-所有排版参数均在 `styles/docx_styles.py` 中统一配置，可视化调整：
+### 🎨 专业中文排版
 
-| 样式类别 | 字体 | 字号 | 行距 | 对齐方式 | 段前 / 段后 |
-|---|---|---|---|---|---|
-| **正文** (Normal) | 仿宋_GB2312 | 小四 (12pt) | 单倍 | 两端对齐 | 0 / 0 |
-| **正文文本** (Body Text) | 仿宋_GB2312 | 小四 (12pt) | 1.2 倍 | 两端对齐 | 0.5 行 / 0 |
-| **一级标题** (`#`) | 黑体 + 加粗 | 18pt | 单倍 | 居中 | 0 / 16 磅 |
-| **其余标题** (`##`~`######`) | 宋体 | 按级递减 | 单倍 | 左对齐 | 1 行 / 0.5 行 |
-| **代码块** | Consolas | 10pt | — | — | 6pt / 6pt |
+所有排版参数集中管理在 `styles/docx_styles.py`，开箱即符合公文规范：
 
-> 首行缩进 2 字符 (24pt)，文档网格对齐已全局禁用。
+| 元素 | 字体 | 字号 | 特殊说明 |
+|---|---|---|---|
+| 正文 | 仿宋_GB2312 | 小四 (12pt) | 两端对齐、首行缩进 2 字符 |
+| 一级标题 | 黑体 + 加粗 | 18pt | 居中、段后 16 磅 |
+| 其余标题 | 宋体 | 按级递减 | 段前 1 行、段后 0.5 行 |
+| 代码块 | Consolas | 10pt | 灰底边框 |
+| 页脚 | — | — | 「第 X 页 共 Y 页」居中页码 |
 
-### 📄 两种标题级别映射
+### 📄 两种标题映射模式
 
 | Markdown | 样式 A (Title 模式) | 样式 B (Heading 模式) |
 |---|---|---|
@@ -49,15 +54,54 @@
 | `#####` | Heading 4 (11pt) | Heading 5 (11pt) |
 | `######` | Heading 5 (10.5pt) | Heading 6 (10.5pt) |
 
-> 两种模式下，同级标题视觉大小完全一致，区别仅在 Word 大纲层级。
+> 两种模式视觉效果完全一致，区别仅在 Word 大纲层级。
 
-### 🔧 自动化能力
+### 🔧 自动化特性
 
-- **字体自动安装**：首次启动时自动检测并静默安装**仿宋_GB2312**字体（写入用户注册表，无需管理员权限）
-- **页脚页码**：自动生成「第 X 页 共 Y 页」居中页码
-- **智能保存**：转换完成后自动保存到源文件同目录，无需手动选择保存路径
-- **快速预览**：转换成功后可一键打开生成的 Word 文档
-- **文件占用提示**：检测到文件被 Word 占用时，弹出友好提示而非崩溃
+| 特性 | 说明 |
+|---|---|
+| 🔤 字体自动安装 | 首次启动静默安装仿宋_GB2312（免管理员权限） |
+| 📄 智能保存 | 输出文件自动保存到源文件同目录 |
+| 👀 快速预览 | 转换完成后一键打开 Word 文档 |
+| ⚠️ 占用检测 | 目标文件被占用时友好提示，不会崩溃 |
+
+---
+
+## 🚀 快速开始
+
+### 环境要求
+
+- Python 3.9+
+- Windows（字体安装功能依赖 Windows 注册表）
+
+### 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+### 启动应用
+
+```bash
+python main.py
+```
+
+### 使用流程
+
+1. **拖入文件** — 将 `.md` 文件拖到窗口中央，或点击 📂 按钮选择
+2. **选择样式** — 样式 A（Title 模式）或 样式 B（Heading 模式）
+3. **一键转换** — 点击 🚀 开始转换
+4. **预览结果** — 在弹出对话框中点击「打开文件」
+
+---
+
+## 📦 打包为 EXE
+
+```bash
+python build.py
+```
+
+自动完成：检测并安装 PyInstaller → 清除缓存 → 打包字体资源 → 生成 `dist/MD2DOCX.exe` 单文件程序。
 
 ---
 
@@ -65,88 +109,53 @@
 
 ```text
 md2docx/
-├── main.py                  # 程序的启动入口（含字体自动安装）
-├── build.py                 # 一键打包 .exe 脚本
-├── requirements.txt         # Python 依赖项
-├── DEVELOPMENT_LOG.md       # 开发日志
-├── font/
-│   └── 仿宋_GB2312.ttf      # 内嵌字体文件（打包时一并分发）
-├── converter/               # 转换引擎核心模块
-│   ├── md_parser.py         # Markdown AST 语法树解析器
-│   └── docx_writer.py       # DOCX 文档生成及格式映射引擎
+├── main.py                  # 程序入口（含字体自动安装）
+├── build.py                 # 一键打包脚本
+├── requirements.txt         # Python 依赖
+├── converter/
+│   ├── md_parser.py         # Markdown AST 解析器 (mistune)
+│   └── docx_writer.py       # DOCX 生成 & 格式映射引擎
 ├── styles/
-│   └── docx_styles.py       # 全局样式配置（字体、字号、间距、标题映射等）
+│   └── docx_styles.py       # 全局样式配置（唯一真实来源）
 ├── ui/
-│   └── main_window.py       # PyQt6 主窗口视图与交互逻辑
-└── utils/
-    └── font_installer.py    # 字体自动检测与静默安装组件
+│   └── main_window.py       # PyQt6 主窗口交互逻辑
+├── utils/
+│   └── font_installer.py    # 字体自动检测与安装
+└── font/
+    └── 仿宋_GB2312.ttf      # 内嵌字体（打包时分发）
 ```
 
 ---
 
-## 🛠️ 安装与运行指南
+## 🧩 二次开发
 
-### 1. 环境依赖
+### 调整排版样式
 
-确保您的系统已安装 Python（建议 3.9 或更高版本）。
+所有样式参数集中在 [`styles/docx_styles.py`](styles/docx_styles.py) 中：
 
-```bash
-pip install -r requirements.txt
-```
-
-*主要依赖项：`PyQt6`, `python-docx`, `mistune`*
-
-### 2. 启动应用程序
-
-```bash
-python main.py
-```
-
-### 3. 使用方法
-
-1. 打开应用程序。
-2. 将 Markdown 文件拖入中央区域，或点击 **📂 选择 Markdown 文件** 按钮。
-3. 选择转换样式（样式 A 或样式 B）。
-4. 点击 **🚀 开始转换**（也可不选文件直接点击，会自动弹出文件选择框）。
-5. 转换完成后，可点击弹出对话框中的 **打开文件** 按钮直接预览结果。
-6. 如需重新选择文件，点击 **❌ 清除选择** 按钮重置。
-
----
-
-## 📦 打包为独立可执行文件 (EXE)
-
-```bash
-python build.py
-```
-
-程序将自动：
-
-1. 检测并安装 `pyinstaller`（如果没有）
-2. 清除之前的打包缓存 (`build/`, `dist/`)
-3. 将字体资源及所有依赖打包为单文件
-4. 生成 **`dist/MD2DOCX.exe`** 免安装程序
-
----
-
-## 🧩 二次开发说明
-
-### 样式与排版
-
-所有样式参数集中管理在 `styles/docx_styles.py` 中，包括：
-
-| 配置项 | 说明 |
+| 配置项 | 控制范围 |
 |---|---|
-| `FONT_CONFIG` | 正文 / 标题 / 一级标题 / 代码的字体配置 |
-| `NORMAL_*` | 基础正文 (Normal) 的行距、段前段后 |
-| `BODY_*` | 正文文本 (Body Text) 的行距、缩进、段前段后 |
-| `HEADING_*` | 标题样式的行距、段前段后、居中等级 |
-| `HEADING_FONT_SIZES_A/B` | 两种模式的标题字号映射表 |
-| `FOOTER_*` | 页脚页码的字体和字号 |
-| `CODE_BLOCK_*` | 代码块的背景色和边框色 |
+| `FONT_CONFIG` | 正文 / 标题 / 一级标题 / 代码的字体与字号 |
+| `NORMAL_*` | 基础正文 (Normal) 的行距与间距 |
+| `BODY_*` | 正文文本 (Body Text) 的行距、缩进、间距 |
+| `HEADING_*` | 标题样式的行距、间距、居中等级 |
+| `HEADING_FONT_SIZES_A/B` | 两种模式的标题字号映射 |
+| `CODE_BLOCK_*` | 代码块背景色与边框色 |
 
-> **重要**：`docx_styles.py` 是样式的唯一真实来源，`docx_writer.py` 的渲染逻辑必须始终引用它的导出变量，不允许硬编码格式参数。
+> **⚠️ 重要规则**：`docx_styles.py` 是样式的唯一真实来源。`docx_writer.py` 必须始终引用其导出变量，禁止硬编码格式参数。
 
-### 添加新 Markdown 语法
+### 扩展新语法支持
 
-1. 在 `converter/md_parser.py` 的 Mistune 选项中启用对应的 `plugins`。
-2. 在 `converter/docx_writer.py` 的 `_process_node()` 中拦截新类型 AST 节点并实现生成逻辑。
+1. 在 `converter/md_parser.py` 的 Mistune 配置中启用对应 `plugins`
+2. 在 `converter/docx_writer.py` 的 `_process_node()` 中处理新 AST 节点
+
+---
+
+## 🛠️ 技术栈
+
+| 组件 | 技术 | 用途 |
+|---|---|---|
+| GUI 框架 | PyQt6 | 桌面窗口与交互 |
+| 文档生成 | python-docx ≥ 1.2.0 | Word 文档创建与样式控制 |
+| Markdown 解析 | mistune ≥ 3.0.0 | AST 语法树解析 |
+| 打包工具 | PyInstaller | 生成独立 EXE |
