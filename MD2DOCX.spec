@@ -3,9 +3,9 @@
 
 a = Analysis(
     ['main.py'],
-    pathex=[],
+    pathex=['D:\\codes\\md2docx\\.agents\\skills\\md2docx-converter'],
     binaries=[],
-    datas=[('font', 'font')],
+    datas=[('D:\\codes\\md2docx\\.agents\\skills\\md2docx-converter\\font', 'font')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
