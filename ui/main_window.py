@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QRadioButton, QButtonGroup,
     QFileDialog, QMessageBox, QFrame, QGroupBox,
-    QProgressBar, QApplication,
+    QProgressBar, QApplication, QTabWidget, QPlainTextEdit,
 )
 from PyQt6.QtCore import Qt, QMimeData
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QFont, QIcon
@@ -135,8 +135,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("MD → DOCX 转换工具")
-        self.setMinimumSize(600, 620)
-        self.resize(600, 620)
+        self.setMinimumSize(620, 720)
+        self.resize(620, 720)
 
         # 主容器
         central_widget = QWidget()
@@ -147,11 +147,14 @@ class MainWindow(QMainWindow):
 
         # 应用全局样式
         self.setStyleSheet("""
+            * {
+                font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+            }
             QMainWindow {
                 background-color: #FFFFFF;
             }
             QGroupBox {
-                font-family: "Microsoft YaHei";
+                font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
                 font-size: 12px;
                 font-weight: bold;
                 border: 1px solid #E0E0E0;
@@ -167,7 +170,7 @@ class MainWindow(QMainWindow):
                 color: #333;
             }
             QRadioButton {
-                font-family: "Microsoft YaHei";
+                font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
                 font-size: 12px;
                 spacing: 8px;
                 padding: 6px 4px;
@@ -175,6 +178,32 @@ class MainWindow(QMainWindow):
             QRadioButton::indicator {
                 width: 16px;
                 height: 16px;
+            }
+            QTabWidget::pane {
+                border: 1px solid #E0E0E0;
+                border-radius: 8px;
+                background: #FAFBFC;
+            }
+            QTabBar::tab {
+                font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", sans-serif;
+                font-size: 11px;
+                font-weight: bold;
+                padding: 8px 20px;
+                margin-right: 2px;
+                border: 1px solid #E0E0E0;
+                border-bottom: none;
+                border-top-left-radius: 6px;
+                border-top-right-radius: 6px;
+                background: #F0F0F0;
+                color: #666;
+            }
+            QTabBar::tab:selected {
+                background: #FAFBFC;
+                color: #5B8DEF;
+                border-bottom: 2px solid #5B8DEF;
+            }
+            QTabBar::tab:hover:!selected {
+                background: #E8EFFF;
             }
         """)
 
@@ -185,18 +214,25 @@ class MainWindow(QMainWindow):
         title_label.setStyleSheet("color: #1A1A2E; margin-bottom: 4px;")
         main_layout.addWidget(title_label)
 
-        subtitle = QLabel("将 Markdown 文件转换为格式化的 Word 文档")
+        subtitle = QLabel("将 Markdown 文件或文本转换为格式化的 Word 文档")
         subtitle.setFont(QFont("Microsoft YaHei", 9))
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setStyleSheet("color: #888;")
         main_layout.addWidget(subtitle)
 
-        # ===== 拖拽区域 =====
-        self.drop_area = DropArea(self)
-        main_layout.addWidget(self.drop_area)
+        # ===== 标签页 =====
+        self.tab_widget = QTabWidget()
+        main_layout.addWidget(self.tab_widget)
 
-        # ===== 选择文件按钮 =====
-        # ===== 文件操作按钮行 =====
+        # ----- Tab 1: 文件模式 -----
+        file_tab = QWidget()
+        file_tab_layout = QVBoxLayout(file_tab)
+        file_tab_layout.setContentsMargins(12, 12, 12, 12)
+        file_tab_layout.setSpacing(10)
+
+        self.drop_area = DropArea(self)
+        file_tab_layout.addWidget(self.drop_area)
+
         file_btn_layout = QHBoxLayout()
         
         select_btn = QPushButton("📂  选择 Markdown 文件")
@@ -245,7 +281,63 @@ class MainWindow(QMainWindow):
         clear_btn.clicked.connect(self.clear_selection)
         file_btn_layout.addWidget(clear_btn)
         
-        main_layout.addLayout(file_btn_layout)
+        file_tab_layout.addLayout(file_btn_layout)
+        self.tab_widget.addTab(file_tab, "📄 文件转换")
+
+        # ----- Tab 2: 文本模式 -----
+        text_tab = QWidget()
+        text_tab_layout = QVBoxLayout(text_tab)
+        text_tab_layout.setContentsMargins(12, 12, 12, 12)
+        text_tab_layout.setSpacing(10)
+
+        text_hint = QLabel("在下方粘贴或输入 Markdown 文本，然后点击“开始转换”")
+        text_hint.setFont(QFont("Microsoft YaHei", 9))
+        text_hint.setStyleSheet("color: #888;")
+        text_tab_layout.addWidget(text_hint)
+
+        self.text_edit = QPlainTextEdit()
+        self.text_edit.setPlaceholderText("请在此处粘贴或输入 Markdown 内容……\n\n例如：\n# 标题\n## 二级标题\n正文内容……")
+        self.text_edit.setFont(QFont("Consolas", 11))
+        self.text_edit.setMinimumHeight(200)
+        self.text_edit.setStyleSheet("""
+            QPlainTextEdit {
+                border: 1px solid #D0D5DD;
+                border-radius: 8px;
+                padding: 10px;
+                background-color: #FFFFFF;
+                color: #333;
+                selection-background-color: #C8D8F8;
+            }
+            QPlainTextEdit:focus {
+                border-color: #5B8DEF;
+            }
+        """)
+        text_tab_layout.addWidget(self.text_edit)
+
+        clear_text_btn = QPushButton("🗑️  清空文本")
+        clear_text_btn.setFont(QFont("Microsoft YaHei", 10))
+        clear_text_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        clear_text_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #FFF5F5;
+                color: #EF4444;
+                border: 1px solid #FDD;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #FEE2E2;
+                border-color: #EF4444;
+            }
+            QPushButton:pressed {
+                background-color: #FECACA;
+            }
+        """)
+        clear_text_btn.clicked.connect(lambda: self.text_edit.clear())
+        text_tab_layout.addWidget(clear_text_btn, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.tab_widget.addTab(text_tab, "✍️ 文本转换")
 
         # ===== 样式选择 =====
         style_group = QGroupBox("选择转换样式")
@@ -271,7 +363,7 @@ class MainWindow(QMainWindow):
         self.convert_btn = QPushButton("🚀  开始转换")
         self.convert_btn.setFont(QFont("Microsoft YaHei", 12, QFont.Weight.Bold))
         self.convert_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.convert_btn.setEnabled(True)  # 始终可用，未选文件时自动弹出选择框
+        self.convert_btn.setEnabled(True)
         self.convert_btn.setStyleSheet("""
             QPushButton {
                 background-color: #5B8DEF;
@@ -293,7 +385,6 @@ class MainWindow(QMainWindow):
             }
         """)
         self.convert_btn.clicked.connect(self.do_convert)
-        # 取消焦点捕获，防止回车键抬起事件从文件选择框透传到此按钮
         self.convert_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         main_layout.addWidget(self.convert_btn)
 
@@ -335,7 +426,16 @@ class MainWindow(QMainWindow):
             self.drop_area.set_file(file_path)
 
     def do_convert(self):
-        """执行转换。"""
+        """执行转换，根据当前 Tab 分发逻辑。"""
+        current_tab = self.tab_widget.currentIndex()
+        
+        if current_tab == 0:
+            self._convert_from_file()
+        else:
+            self._convert_from_text()
+
+    def _convert_from_file(self):
+        """文件模式转换。"""
         file_path = self.drop_area.file_path
         
         # 如果没有选择文件，弹出文件选择框
@@ -347,54 +447,39 @@ class MainWindow(QMainWindow):
                 "Markdown 文件 (*.md);;所有文件 (*.*)"
             )
             if not file_path:
-                return  # 用户取消了选择
+                return
             self.drop_area.set_file(file_path)
 
         if not os.path.isfile(file_path):
             QMessageBox.warning(self, "错误", f"文件不存在：\n{file_path}")
             return
 
-        # 确定样式模式
         style_mode = 'A' if self.radio_a.isChecked() else 'B'
-
-        # 自动生成保存路径：同目录同名 .docx
-        save_path = os.path.splitext(file_path)[0] + '.docx'
+        
+        default_save_path = os.path.splitext(file_path)[0] + '.docx'
+        save_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "保存 Word 文档",
+            default_save_path,
+            "Word 文档 (*.docx)"
+        )
+        if not save_path:
+            return
 
         self.status_label.setText("⏳ 正在转换...")
         self.status_label.setStyleSheet("color: #5B8DEF;")
         QApplication.processEvents()
 
         try:
-            # 读取并解析 MD
             md_text = read_md_file(file_path)
             ast_nodes = parse_markdown(md_text)
 
-            # 生成 DOCX
             writer = DocxWriter(style_mode=style_mode)
             writer.convert(ast_nodes, save_path)
 
             self.status_label.setText(f"✅ 转换成功！已保存至：{os.path.basename(save_path)}")
             self.status_label.setStyleSheet("color: #22C55E;")
-
-            msg_box = QMessageBox(self)
-            msg_box.setWindowTitle("转换成功")
-            msg_box.setText(f"文件已保存至：\n{save_path}")
-            msg_box.setIcon(QMessageBox.Icon.Information)
-
-            ok_btn = msg_box.addButton("确定", QMessageBox.ButtonRole.AcceptRole)
-            open_btn = msg_box.addButton("打开文档", QMessageBox.ButtonRole.ActionRole)
-
-            msg_box.exec()
-
-            if msg_box.clickedButton() == open_btn:
-                import platform
-                import subprocess
-                if platform.system() == 'Windows':
-                    os.startfile(save_path)
-                elif platform.system() == 'Darwin':
-                    subprocess.call(('open', save_path))
-                else:
-                    subprocess.call(('xdg-open', save_path))
+            self._show_success_dialog(save_path)
 
         except PermissionError as e:
             msg = f"保存失败：文件正在被其他程序（如 Word）占用。\n\n请尝试先关闭已打开的 '{os.path.basename(save_path)}'，然后再重新开始转换！\n\n底层错误信息：{str(e)}"
@@ -405,8 +490,70 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.status_label.setText(f"❌ 转换失败：{str(e)}")
             self.status_label.setStyleSheet("color: #EF4444;")
-            QMessageBox.critical(
-                self,
-                "转换失败",
-                f"转换过程中出现错误：\n{str(e)}"
-            )
+            QMessageBox.critical(self, "转换失败", f"转换过程中出现错误：\n{str(e)}")
+
+    def _convert_from_text(self):
+        """文本模式转换。"""
+        md_text = self.text_edit.toPlainText().strip()
+        
+        if not md_text:
+            QMessageBox.information(self, "提示", "请先在文本框中输入或粘贴 Markdown 内容。")
+            return
+
+        style_mode = 'A' if self.radio_a.isChecked() else 'B'
+
+        save_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "保存 Word 文档",
+            "未命名文档.docx",
+            "Word 文档 (*.docx)"
+        )
+        if not save_path:
+            return
+
+        self.status_label.setText("⏳ 正在转换...")
+        self.status_label.setStyleSheet("color: #5B8DEF;")
+        QApplication.processEvents()
+
+        try:
+            ast_nodes = parse_markdown(md_text)
+
+            writer = DocxWriter(style_mode=style_mode)
+            writer.convert(ast_nodes, save_path)
+
+            self.status_label.setText(f"✅ 转换成功！已保存至：{os.path.basename(save_path)}")
+            self.status_label.setStyleSheet("color: #22C55E;")
+            self._show_success_dialog(save_path)
+
+        except PermissionError as e:
+            msg = f"保存失败：文件正在被其他程序占用。\n\n请先关闭已打开的 '{os.path.basename(save_path)}'。\n\n底层错误：{str(e)}"
+            self.status_label.setText("❌ 转换失败：文件被占用")
+            self.status_label.setStyleSheet("color: #EF4444;")
+            QMessageBox.critical(self, "转换失败 - 文件占用", msg)
+            
+        except Exception as e:
+            self.status_label.setText(f"❌ 转换失败：{str(e)}")
+            self.status_label.setStyleSheet("color: #EF4444;")
+            QMessageBox.critical(self, "转换失败", f"转换过程中出现错误：\n{str(e)}")
+
+    def _show_success_dialog(self, save_path: str):
+        """显示转换成功对话框。"""
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("转换成功")
+        msg_box.setText(f"文件已保存至：\n{save_path}")
+        msg_box.setIcon(QMessageBox.Icon.Information)
+
+        ok_btn = msg_box.addButton("确定", QMessageBox.ButtonRole.AcceptRole)
+        open_btn = msg_box.addButton("打开文档", QMessageBox.ButtonRole.ActionRole)
+
+        msg_box.exec()
+
+        if msg_box.clickedButton() == open_btn:
+            import platform
+            import subprocess
+            if platform.system() == 'Windows':
+                os.startfile(save_path)
+            elif platform.system() == 'Darwin':
+                subprocess.call(('open', save_path))
+            else:
+                subprocess.call(('xdg-open', save_path))

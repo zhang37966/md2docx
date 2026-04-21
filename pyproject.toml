@@ -1,0 +1,21 @@
+[project]
+name = "md2docx"
+version = "1.0.0"
+description = "轻量级 Markdown → Word 桌面转换工具，面向中文公文排版场景"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "PyQt6",
+    "python-docx>=1.2.0",
+    "mistune>=3.0.0",
+]
+
+[project.optional-dependencies]
+build = [
+    "pyinstaller",
+]
+
+[dependency-groups]
+dev = [
+    "pyinstaller",
+]

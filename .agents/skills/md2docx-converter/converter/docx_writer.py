@@ -29,6 +29,16 @@ from styles.docx_styles import (
     FOOTER_FONT_NAME,
     FOOTER_FONT_SIZE,
     CODE_BLOCK_BG_COLOR,
+    OL_LEFT_INDENT,
+    OL_HANGING_INDENT,
+    OL_LINE_SPACING,
+    OL_SPACE_BEFORE_LINES,
+    OL_SPACE_AFTER,
+    UL_LEFT_INDENT,
+    UL_HANGING_INDENT,
+    UL_LINE_SPACING,
+    UL_SPACE_BEFORE_LINES,
+    UL_SPACE_AFTER,
 )
 from converter.md_parser import extract_text_from_children
 from docx.enum.style import WD_STYLE_TYPE
@@ -78,6 +88,53 @@ class DocxWriter:
             
         # 设置正文两端对齐
         pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+
+        # 3. "有序列表段落" (List Paragraph) 样式
+        try:
+            ol_style = self.doc.styles['List Paragraph']
+        except KeyError:
+            ol_style = self.doc.styles.add_style('List Paragraph', WD_STYLE_TYPE.PARAGRAPH)
+        ol_style.base_style = self.doc.styles['Normal']
+        ol_style.font.name = FONT_CONFIG['body']['name_en']
+        ol_style.font.size = FONT_CONFIG['body']['size']
+        ol_style.element.rPr.rFonts.set(qn('w:eastAsia'), FONT_CONFIG['body']['name_cn'])
+
+        ol_pf = ol_style.paragraph_format
+        ol_pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        ol_pf.left_indent = OL_LEFT_INDENT + OL_HANGING_INDENT
+        ol_pf.first_line_indent = -OL_HANGING_INDENT
+        ol_pf.line_spacing = OL_LINE_SPACING
+        ol_pf.space_after = OL_SPACE_AFTER
+
+        ol_pPr = ol_style._element.get_or_add_pPr()
+        ol_spacing = ol_pPr.get_or_add_spacing()
+        ol_spacing.set(qn('w:beforeLines'), str(OL_SPACE_BEFORE_LINES))
+        if ol_spacing.get(qn('w:before')) is not None:
+            del ol_spacing.attrib[qn('w:before')]
+
+        # 4. "无序列表段落" (UL Paragraph) 自定义样式（不使用内置 List Bullet 以避免自动编号和制表符）
+        try:
+            ul_style = self.doc.styles['UL Paragraph']
+        except KeyError:
+            ul_style = self.doc.styles.add_style('UL Paragraph', WD_STYLE_TYPE.PARAGRAPH)
+        ul_style.base_style = self.doc.styles['Normal']
+        ul_style.font.name = FONT_CONFIG['body']['name_en']
+        ul_style.font.size = FONT_CONFIG['body']['size']
+        ul_style.element.rPr.rFonts.set(qn('w:eastAsia'), FONT_CONFIG['body']['name_cn'])
+
+        ul_pf = ul_style.paragraph_format
+        ul_pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        ul_pf.left_indent = UL_LEFT_INDENT + UL_HANGING_INDENT
+        ul_pf.first_line_indent = -UL_HANGING_INDENT
+        ul_pf.line_spacing = UL_LINE_SPACING
+        ul_pf.space_after = UL_SPACE_AFTER
+        ul_pf.tab_stops.clear_all()  # 清除所有制表位
+
+        ul_pPr = ul_style._element.get_or_add_pPr()
+        ul_spacing = ul_pPr.get_or_add_spacing()
+        ul_spacing.set(qn('w:beforeLines'), str(UL_SPACE_BEFORE_LINES))
+        if ul_spacing.get(qn('w:before')) is not None:
+            del ul_spacing.attrib[qn('w:before')]
 
         # 修改全局标题颜色（转为自动/黑色）并约束为统一种类字体，设定段前段后行距
         title_cfg = FONT_CONFIG.get('title', {})
@@ -187,7 +244,7 @@ class DocxWriter:
 
         if node_type == 'heading':
             self._add_heading(node)
-        elif node_type == 'paragraph':
+        elif node_type in ('paragraph', 'block_text'):
             self._add_paragraph(node)
         elif node_type == 'list':
             self._add_list(node, list_level)
@@ -249,10 +306,34 @@ class DocxWriter:
                 )
 
     def _add_paragraph(self, node: dict):
-        """添加段落。"""
+        """添加段落。检测软/硬回车并拆分为多个独立的 Word 段落"""
         children = node.get('children', [])
-        paragraph = self.doc.add_paragraph(style='Body Text')
-        self._add_inline_content(paragraph, children)
+        
+        current_group = []
+        groups = [current_group]
+        
+        for child in children:
+            if isinstance(child, dict) and child.get('type') in ('softbreak', 'linebreak'):
+                current_group = []
+                groups.append(current_group)
+            elif isinstance(child, dict) and child.get('type') == 'text' and '\n' in (child.get('raw', '') or child.get('text', '')):
+                # 兼容文本中直接包含换行符的情况
+                text = child.get('raw', '') or child.get('text', '')
+                parts = text.split('\n')
+                for i, part in enumerate(parts):
+                    if i > 0:
+                        current_group = []
+                        groups.append(current_group)
+                    if part:
+                        # 构造一个新的纯文本节点推入组内
+                        current_group.append({'type': 'text', 'raw': part})
+            else:
+                current_group.append(child)
+                
+        for group in groups:
+            if group:  # 只生成非空的段落
+                paragraph = self.doc.add_paragraph(style='Body Text')
+                self._add_inline_content(paragraph, group)
 
     def _add_inline_content(self, paragraph, children: list):
         """向段落中添加行内内容（文本、加粗、斜体、代码等）。"""
@@ -329,10 +410,18 @@ class DocxWriter:
                     self._add_inline_content(paragraph, child['children'])
 
     def _add_list(self, node: dict, level: int = 0):
-        """添加列表（有序/无序）。"""
+        """添加列表（有序/无序），有序用 List Paragraph，无序用 List Bullet。"""
         ordered = node.get('attrs', {}).get('ordered', False)
         children = node.get('children', [])
         counter = node.get('attrs', {}).get('start', 1) or 1
+
+        # 根据类型选择样式和缩进参数
+        if ordered:
+            style_name = 'List Paragraph'
+            base_indent = OL_LEFT_INDENT + OL_HANGING_INDENT
+        else:
+            style_name = 'UL Paragraph'
+            base_indent = UL_LEFT_INDENT + UL_HANGING_INDENT
 
         for item in children:
             if not isinstance(item, dict):
@@ -343,21 +432,18 @@ class DocxWriter:
                 for sub_node in item_children:
                     if not isinstance(sub_node, dict):
                         continue
-                    if sub_node.get('type') == 'paragraph':
-                        # 生成列表前缀
+                    if sub_node.get('type') in ('paragraph', 'block_text'):
+                        paragraph = self.doc.add_paragraph(style=style_name)
+
+                        # 有序列表手动添加编号前缀，无序列表手动添加项目符号
                         if ordered:
                             prefix = f'{counter}. '
                             counter += 1
                         else:
                             prefix = '• '
-
-                        indent = '    ' * level
-                        paragraph = self.doc.add_paragraph()
-                        # 设置缩进
-                        paragraph.paragraph_format.left_indent = Cm(1.27 * (level + 1))
-
-                        run = paragraph.add_run(indent + prefix)
+                        run = paragraph.add_run(prefix)
                         self._apply_body_font(run)
+
                         self._add_inline_content(paragraph, sub_node.get('children', []))
 
                     elif sub_node.get('type') == 'list':
@@ -459,11 +545,11 @@ class DocxWriter:
         pPr.append(pBdr)
 
     def _add_block_quote(self, node: dict):
-        """添加引用块。"""
+        """添加引用说明块。左侧带有竖线，底色为淡蓝色"""
         children = node.get('children', [])
         for child in children:
             if isinstance(child, dict):
-                if child.get('type') == 'paragraph':
+                if child.get('type') in ('paragraph', 'block_text'):
                     paragraph = self.doc.add_paragraph()
                     # 添加左侧蓝色边框
                     pPr = paragraph._element.get_or_add_pPr()

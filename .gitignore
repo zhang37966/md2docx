@@ -1,0 +1,30 @@
+# 打包产物
+dist/
+build/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# uv
+.python-version
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 测试产物
+*.docx
+!test_grid.docx
+!test_sample_styleA.docx
+!test_sample_styleB.docx
+
+# 可执行文件
+*.exe

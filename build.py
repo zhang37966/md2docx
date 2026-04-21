@@ -36,13 +36,22 @@ def build_exe():
     # -w/--windowed: 隐藏控制台黑窗口 (GUI 程序必备)
     # -n/--name    : 生成的 exe 名字
     # --clean      : 每次打包前清理
+    # 根据操作系统动态选择分隔符 (Windows 是 ; Mac/Linux 是 :)
+    separator = ";" if sys.platform == "win32" else ":"
+
+    # 核心模块已迁移至 Skill 目录
+    skill_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '.agents', 'skills', 'md2docx-converter')
+    font_dir = os.path.join(skill_dir, 'font')
+
     pyinstaller_cmd = [
         sys.executable, "-m", "PyInstaller",
         "--clean",
         "-F",
         "-w",
         "-n", "MD2DOCX",
-        "--add-data", "font;font",  # 包含字体目录
+        "--add-data", f"{font_dir}{separator}font",  # 包含字体目录
+        "--paths", skill_dir,  # 确保 PyInstaller 找到 Skill 内的模块
         "main.py"
     ]
 
@@ -52,10 +61,16 @@ def build_exe():
     process = subprocess.run(pyinstaller_cmd)
     
     if process.returncode == 0:
-        exe_path = os.path.abspath(os.path.join("dist", "MD2DOCX.exe"))
+        if sys.platform == "win32":
+            out_path = os.path.abspath(os.path.join("dist", "MD2DOCX.exe"))
+        elif sys.platform == "darwin":
+            out_path = os.path.abspath(os.path.join("dist", "MD2DOCX.app"))
+        else:
+            out_path = os.path.abspath(os.path.join("dist", "MD2DOCX"))
+            
         print("\n" + "="*50)
         print("🎉 打包成功！")
-        print(f"📁 你的独立程序位于： {exe_path}")
+        print(f"📁 你的独立程序位于： {out_path}")
         print("="*50)
     else:
         print("\n❌ 打包失败，请检查上面的错误输出。")

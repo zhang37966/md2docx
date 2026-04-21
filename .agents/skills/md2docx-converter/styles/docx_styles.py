@@ -107,6 +107,20 @@ HEADING_SPACE_AFTER_LINES = 50   # 段后 0.5 行 (基于 XML afterLines 参数�
 # 需要居中对齐的标题等级 (对应 Markdown 的 # 等级数)
 HEADING_CENTER_LEVELS = [1]  # # 一级标题居中
 
+# 4. 有序列表 (List Paragraph) 样式配置
+OL_LEFT_INDENT = Cm(0.3)             # 文本之前（左缩进）0.3 厘米
+OL_HANGING_INDENT = Cm(0.7)          # 悬挂缩进 0.7 厘米
+OL_LINE_SPACING = 1.1                # 多倍行距 1.1 倍
+OL_SPACE_BEFORE_LINES = 50           # 段前 0.5 行
+OL_SPACE_AFTER = Pt(0)               # 段后 0
+
+# 5. 无序列表 (List Bullet) 样式配置
+UL_LEFT_INDENT = Cm(0.52)            # 文本之前（左缩进）0.52 厘米
+UL_HANGING_INDENT = Cm(0.41)         # 悬挂缩进 0.41 厘米
+UL_LINE_SPACING = 1.1                # 多倍行距 1.1 倍
+UL_SPACE_BEFORE_LINES = 50           # 段前 0.5 行
+UL_SPACE_AFTER = Pt(0)               # 段后 0
+
 # 标题字号映射
 # 样式 B 的字号基准
 HEADING_FONT_SIZES_B = {
